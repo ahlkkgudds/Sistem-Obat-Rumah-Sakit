@@ -18,7 +18,7 @@ import { PengaturanSistemView } from './views/PengaturanSistemView';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_USERS.petugas_farmasi);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [currentScreen, setCurrentScreen] = useState<ScreenId>('dashboard');
   const [mobileOpen, setMobileOpen] = useState(false);
