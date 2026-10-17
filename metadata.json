@@ -1,0 +1,6 @@
+{
+  "name": "Klinik Jambu Mawar - Farmasi & Apotek FEFO",
+  "description": "Sistem Informasi Manajemen Farmasi, Pemantauan Kedaluwarsa Obat & Rotasi FEFO BPOM Terintegrasi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
