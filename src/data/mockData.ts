@@ -436,3 +436,48 @@ export const INITIAL_QUARANTINE_RECORDS: QuarantineRecord[] = [
     status: 'Terkunci di Lemari Karantina',
   },
 ];
+
+import { UserProfile } from '../types';
+
+export const DEFAULT_USERS: Record<string, UserProfile> = {
+  petugas_farmasi: {
+    id: 'usr-farmasi-01',
+    name: 'apt. Rahmawati, S.Farm',
+    username: 'rahmawati',
+    role: 'petugas_farmasi',
+    roleLabel: 'Petugas Farmasi',
+    title: 'Apoteker Penanggung Jawab (APJ)',
+    credentialNumber: 'STRA: 19890412/STRA-ITB/2016 | SIPA: 19890214/SIPA-31.71/2021',
+    avatarInitials: 'AR',
+    email: 'rahmawati.farmasi@jambumawar.id',
+    department: 'Instalasi Farmasi & Apotek Pelayanan',
+    statusBadge: 'Shift Pagi Aktif (07:00 - 15:00)',
+    permissions: {
+      canDispense: true,
+      canReceivePbf: true,
+      canEditInventory: true,
+      canApproveDisposal: false,
+      canViewExecutiveFinancials: false,
+    },
+  },
+  pimpinan_klinik: {
+    id: 'usr-pimpinan-01',
+    name: 'dr. Hendra Wijaya, Sp.PK, M.Kes',
+    username: 'hendra.direktur',
+    role: 'pimpinan_klinik',
+    roleLabel: 'Pimpinan Klinik',
+    title: 'Direktur & Penanggung Jawab Medis Klinik',
+    credentialNumber: 'SIP: 3171/SIP.D/2018/0942 | NIP: 197805122003121002',
+    avatarInitials: 'HW',
+    email: 'direktur@jambumawar.id',
+    department: 'Manajemen & Komite Mutu Pelayanan',
+    statusBadge: 'Otoritas Eksekutif & Pengawas',
+    permissions: {
+      canDispense: true,
+      canReceivePbf: true,
+      canEditInventory: true,
+      canApproveDisposal: true,
+      canViewExecutiveFinancials: true,
+    },
+  },
+};

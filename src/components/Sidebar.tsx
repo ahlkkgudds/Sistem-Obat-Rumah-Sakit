@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScreenId } from '../types';
+import { ScreenId, UserProfile } from '../types';
 
 interface SidebarProps {
   currentScreen: ScreenId;
@@ -9,6 +9,7 @@ interface SidebarProps {
   expiredCount: number;
   roomTemp: number;
   chillerTemp: number;
+  currentUser: UserProfile;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -19,7 +20,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   expiredCount,
   roomTemp,
   chillerTemp,
+  currentUser,
 }) => {
+  const isPimpinan = currentUser.role === 'pimpinan_klinik';
+
   const navItems: { id: ScreenId; label: string; icon: string; badge?: number }[] = [
     { id: 'dashboard', label: 'Dashboard / Ikhtisar', icon: 'dashboard' },
     { id: 'manajemen-stok-obat', label: 'Manajemen Stok & Rak', icon: 'medication' },
@@ -69,6 +73,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
+        </div>
+
+        {/* Current User Active Role Pill */}
+        <div className="px-3 pt-3 pb-1">
+          <div
+            className={`px-3 py-2 rounded-xl border flex items-center gap-2.5 ${
+              isPimpinan
+                ? 'bg-tertiary/10 border-tertiary/30 text-tertiary'
+                : 'bg-primary/10 border-primary/30 text-primary'
+            }`}
+          >
+            <div
+              className={`w-7 h-7 rounded-lg flex items-center justify-center font-extrabold text-xs text-white shrink-0 ${
+                isPimpinan ? 'bg-tertiary' : 'bg-primary'
+              }`}
+            >
+              {currentUser.avatarInitials}
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-[10px] uppercase font-bold tracking-wider opacity-80 leading-none">
+                Peran Pengguna:
+              </span>
+              <span className="text-xs font-bold text-on-surface truncate mt-0.5">
+                {currentUser.roleLabel}
+              </span>
+            </div>
+            <span
+              className={`material-symbols-outlined text-[16px] ${
+                isPimpinan ? 'text-tertiary' : 'text-primary'
+              }`}
+            >
+              {isPimpinan ? 'admin_panel_settings' : 'medication'}
+            </span>
+          </div>
         </div>
 
         {/* Navigation Category Label */}

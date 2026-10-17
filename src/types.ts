@@ -77,6 +77,29 @@ export interface QuarantineRecord {
   status: 'Terkunci di Lemari Karantina' | 'Menunggu Saksi Dinkes/BPOM' | 'Telah Dimusnahkan';
 }
 
+export type UserRole = 'petugas_farmasi' | 'pimpinan_klinik';
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  username: string;
+  role: UserRole;
+  roleLabel: string;
+  title: string;
+  credentialNumber: string;
+  avatarInitials: string;
+  email: string;
+  department: string;
+  statusBadge: string;
+  permissions: {
+    canDispense: boolean;
+    canReceivePbf: boolean;
+    canEditInventory: boolean;
+    canApproveDisposal: boolean;
+    canViewExecutiveFinancials: boolean;
+  };
+}
+
 export type ScreenId =
   | 'dashboard'
   | 'manajemen-stok-obat'

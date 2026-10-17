@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ScreenId, DrugItem, BatchItem, QuarantineRecord } from './types';
-import { INITIAL_DRUGS, INITIAL_BATCHES, INITIAL_QUARANTINE_RECORDS } from './data/mockData';
+import { ScreenId, DrugItem, BatchItem, QuarantineRecord, UserProfile } from './types';
+import { INITIAL_DRUGS, INITIAL_BATCHES, INITIAL_QUARANTINE_RECORDS, DEFAULT_USERS } from './data/mockData';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { QuarantineModal } from './components/QuarantineModal';
 import { ExportModal } from './components/ExportModal';
 import { AddDrugModal } from './components/AddDrugModal';
+import { LoginView } from './views/LoginView';
 import { DashboardView } from './views/DashboardView';
 import { MonitoringKedaluwarsaView } from './views/MonitoringKedaluwarsaView';
 import { ManajemenStokView } from './views/ManajemenStokView';
@@ -16,6 +17,9 @@ import { LaporanBeritaAcaraView } from './views/LaporanBeritaAcaraView';
 import { PengaturanSistemView } from './views/PengaturanSistemView';
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_USERS.petugas_farmasi);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
   const [currentScreen, setCurrentScreen] = useState<ScreenId>('dashboard');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,6 +51,25 @@ export default function App() {
     setTimeout(() => {
       setToast((prev) => ({ ...prev, show: false }));
     }, 3500);
+  };
+
+  // Auth Handlers
+  const handleLogin = (user: UserProfile) => {
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+    setCurrentScreen('dashboard');
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    showToast('Anda telah keluar dari sesi sistem farmasi.', 'logout');
+  };
+
+  const handleSwitchRole = () => {
+    const nextRoleKey = currentUser.role === 'petugas_farmasi' ? 'pimpinan_klinik' : 'petugas_farmasi';
+    const nextUser = DEFAULT_USERS[nextRoleKey];
+    setCurrentUser(nextUser);
+    showToast(`Beralih peran aktif: ${nextUser.roleLabel} (${nextUser.name})`, 'swap_horiz');
   };
 
   // Handlers
@@ -164,6 +187,26 @@ export default function App() {
 
   const expiredCount = batches.filter((b) => b.status === 'expired' || b.isLocked).length;
 
+  // If user is not logged in, render the dedicated Login Screen!
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-surface font-sans text-on-surface antialiased">
+        <LoginView onLogin={handleLogin} onShowToast={showToast} />
+        {/* Toast Notification */}
+        <div
+          className={`fixed bottom-6 right-6 z-50 transform transition-all duration-300 pointer-events-none flex items-center gap-2.5 px-4 py-3 bg-inverse-surface text-inverse-on-surface rounded-2xl shadow-2xl border border-surface-container/20 ${
+            toast.show ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+          }`}
+        >
+          <span className="material-symbols-outlined text-secondary-fixed text-[22px]">
+            {toast.icon}
+          </span>
+          <span className="text-xs sm:text-sm font-semibold max-w-sm">{toast.message}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-surface font-sans text-on-surface antialiased flex flex-col">
       {/* Left Sidebar */}
@@ -175,6 +218,7 @@ export default function App() {
         expiredCount={expiredCount || 12}
         roomTemp={roomTemp}
         chillerTemp={chillerTemp}
+        currentUser={currentUser}
       />
 
       {/* Main Content Wrap */}
@@ -186,6 +230,9 @@ export default function App() {
           onSearchChange={setSearchQuery}
           batches={batches}
           onNavigateToScreen={setCurrentScreen}
+          currentUser={currentUser}
+          onSwitchRole={handleSwitchRole}
+          onLogout={handleLogout}
         />
 
         {/* Page Container */}
@@ -198,6 +245,7 @@ export default function App() {
               onOpenAddDrugModal={() => setIsAddDrugModalOpen(true)}
               onOpenQuarantineModal={handleOpenQuarantineModal}
               onShowToast={showToast}
+              currentUser={currentUser}
             />
           )}
 
@@ -245,6 +293,7 @@ export default function App() {
             <LaporanBeritaAcaraView
               quarantineRecords={quarantineRecords}
               onShowToast={showToast}
+              currentUser={currentUser}
             />
           )}
 

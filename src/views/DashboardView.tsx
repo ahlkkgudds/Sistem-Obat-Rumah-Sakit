@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BatchItem, DrugItem, ScreenId } from '../types';
+import { BatchItem, DrugItem, ScreenId, UserProfile } from '../types';
 
 interface DashboardViewProps {
   batches: BatchItem[];
@@ -8,6 +8,7 @@ interface DashboardViewProps {
   onOpenAddDrugModal: () => void;
   onOpenQuarantineModal: (batch?: BatchItem) => void;
   onShowToast: (message: string, icon?: string) => void;
+  currentUser?: UserProfile;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -17,9 +18,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenAddDrugModal,
   onOpenQuarantineModal,
   onShowToast,
+  currentUser,
 }) => {
   const [filterMode, setFilterMode] = useState<'all' | 'expired' | '30days' | '60days'>('all');
   const [selectedChartDay, setSelectedChartDay] = useState<string>('Hari ini');
+
+  const isPimpinan = currentUser?.role === 'pimpinan_klinik';
 
   const expiredBatches = batches.filter((b) => b.status === 'expired');
   const criticalBatches = batches.filter((b) => b.status === 'critical');
@@ -48,22 +52,41 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Top Greeting & Action Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-5 sm:p-6 rounded-2xl shadow-sm border border-surface-container/60">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shrink-0 shadow-sm">
-            <span className="material-symbols-outlined text-[28px]">local_pharmacy</span>
+          <div
+            className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+              isPimpinan ? 'bg-tertiary text-on-tertiary' : 'bg-primary-fixed text-primary'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[28px]">
+              {isPimpinan ? 'admin_panel_settings' : 'local_pharmacy'}
+            </span>
           </div>
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="font-bold text-lg sm:text-xl text-on-surface">
-                Selamat Pagi, apt. Rahmawati
+                {isPimpinan
+                  ? `Selamat Datang, ${currentUser?.name || 'dr. Hendra Wijaya, Sp.PK'}`
+                  : `Selamat Pagi, ${currentUser?.name || 'apt. Rahmawati, S.Farm'}`}
               </h1>
-              <span className="bg-secondary-container text-on-secondary-container text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
-                Shift Pagi Aktif
+              <span
+                className={`text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm ${
+                  isPimpinan
+                    ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+                    : 'bg-secondary-container text-on-secondary-container'
+                }`}
+              >
+                <span
+                  className={`inline-block w-1.5 h-1.5 rounded-full animate-pulse ${
+                    isPimpinan ? 'bg-tertiary' : 'bg-secondary'
+                  }`}
+                ></span>
+                {isPimpinan ? 'Pimpinan Klinik & Pengawas' : 'Shift Pagi Aktif'}
               </span>
             </div>
             <p className="text-xs sm:text-sm text-on-surface-variant mt-0.5 leading-relaxed">
-              Sistem FEFO aktif. Periksa {expiredBatches.length} batch obat yang telah dikunci
-              otomatis sebelum pelayanan resep poliklinik dimulai.
+              {isPimpinan
+                ? `Portal pengawasan eksekutif. Pantau efisiensi buffer stock, nilai perputaran FEFO, dan otorisasi berita acara pemusnahan obat kedaluwarsa.`
+                : `Sistem FEFO aktif. Periksa ${expiredBatches.length} batch obat yang telah dikunci otomatis sebelum pelayanan resep poliklinik dimulai.`}
             </p>
           </div>
         </div>
@@ -76,22 +99,77 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
             <span className="font-semibold text-on-surface">Bulan Berjalan (Okt 2024)</span>
           </div>
-          <button
-            onClick={() => onShowToast('Mencetak Laporan Konsolidasi Bulanan Farmasi...', 'print')}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-semibold text-xs sm:text-sm transition-all shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[18px]">print</span>
-            <span>Cetak Laporan Bulanan</span>
-          </button>
-          <button
-            onClick={onOpenAddDrugModal}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-semibold text-xs sm:text-sm transition-all shadow-md"
-          >
-            <span className="material-symbols-outlined text-[18px]">add_circle</span>
-            <span>Tambah Obat Baru</span>
-          </button>
+
+          {isPimpinan ? (
+            <>
+              <button
+                onClick={() => onNavigate('laporan-pemusnahan')}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-tertiary text-on-tertiary hover:bg-tertiary-container font-semibold text-xs sm:text-sm transition-all shadow-md"
+              >
+                <span className="material-symbols-outlined text-[18px]">verified</span>
+                <span>Otorisasi Berita Acara</span>
+              </button>
+              <button
+                onClick={() => onShowToast('Mengunduh Laporan Audit Kepatuhan BPOM & SIK...', 'download')}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-semibold text-xs sm:text-sm transition-all shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[18px]">print</span>
+                <span>Cetak Laporan Manajerial</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => onShowToast('Mencetak Laporan Konsolidasi Bulanan Farmasi...', 'print')}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-semibold text-xs sm:text-sm transition-all shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[18px]">print</span>
+                <span>Cetak Laporan Bulanan</span>
+              </button>
+              <button
+                onClick={onOpenAddDrugModal}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-semibold text-xs sm:text-sm transition-all shadow-md"
+              >
+                <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                <span>Tambah Obat Baru</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Executive Director Oversight Bento (when logged in as Pimpinan Klinik) */}
+      {isPimpinan && (
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-tertiary/10 via-surface-container-low to-surface-container-lowest border border-tertiary/30 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-tertiary text-on-tertiary flex items-center justify-center shrink-0 shadow-sm">
+              <span className="material-symbols-outlined text-[24px]">query_stats</span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-tertiary uppercase tracking-wider block">
+                Ringkasan Eksekutif Mutu Farmasi &amp; Keuangan
+              </span>
+              <p className="text-xs text-on-surface-variant mt-0.5">
+                Kepatuhan Pengeluaran FEFO: <strong className="text-secondary">99.4%</strong> &bull; Total
+                Nilai Persediaan Farmasi: <strong className="text-on-surface">Rp 148.920.000</strong>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start md:self-auto">
+            <span className="bg-error-container text-on-error-container text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-xs">
+              <span className="material-symbols-outlined text-[15px]">assignment_late</span>
+              2 Berita Acara Menunggu Pengesahan Anda
+            </span>
+            <button
+              onClick={() => onNavigate('laporan-pemusnahan')}
+              className="text-xs text-tertiary font-bold hover:underline ml-1"
+            >
+              Tinjau Dokumen &rarr;
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Urgent Lock Alert Banner */}
       <div className="bg-gradient-to-r from-error-container via-surface-container-lowest to-surface-container-low p-4 sm:p-5 rounded-2xl shadow-sm border border-error-container flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BatchItem } from '../types';
+import { BatchItem, UserProfile } from '../types';
 
 interface HeaderProps {
   onOpenMobileMenu: () => void;
@@ -8,6 +8,9 @@ interface HeaderProps {
   batches: BatchItem[];
   onSelectBatchItem?: (batch: BatchItem) => void;
   onNavigateToScreen: (screen: any) => void;
+  currentUser: UserProfile;
+  onSwitchRole: () => void;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,12 +19,17 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   batches,
   onNavigateToScreen,
+  currentUser,
+  onSwitchRole,
+  onLogout,
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('24 Okt 2024, 09:41 WIB');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const isPimpinan = currentUser.role === 'pimpinan_klinik';
 
   // Update clock
   useEffect(() => {
@@ -203,21 +211,36 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* APJ Pharmacist Profile Pill */}
+        {/* User Profile Pill */}
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setShowProfile(!showProfile)}
-            className="flex items-center gap-2 pl-1.5 bg-surface-container-low py-1 pr-2.5 sm:pr-3.5 rounded-full hover:bg-surface-container transition-all border border-surface-container/60"
+            className="flex items-center gap-2 pl-1.5 bg-surface-container-low py-1 pr-2.5 sm:pr-3.5 rounded-full hover:bg-surface-container transition-all border border-surface-container/60 shadow-sm"
           >
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
-              <span className="material-symbols-outlined text-[18px]">person</span>
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-on-primary shrink-0 shadow-sm font-bold text-xs ${
+                isPimpinan ? 'bg-tertiary' : 'bg-primary'
+              }`}
+            >
+              {currentUser.avatarInitials}
             </div>
             <div className="hidden sm:flex flex-col text-left">
-              <span className="text-xs font-semibold text-on-surface leading-tight">
-                apt. Rahmawati, S.Farm
-              </span>
-              <span className="text-[10px] text-on-surface-variant leading-none">
-                Apoteker Penanggung Jawab
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-on-surface leading-tight truncate max-w-[150px]">
+                  {currentUser.name}
+                </span>
+                <span
+                  className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded-full ${
+                    isPimpinan
+                      ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+                      : 'bg-secondary-container text-on-secondary-container'
+                  }`}
+                >
+                  {isPimpinan ? 'Pimpinan' : 'Farmasi'}
+                </span>
+              </div>
+              <span className="text-[10px] text-on-surface-variant leading-none truncate max-w-[180px]">
+                {currentUser.title}
               </span>
             </div>
             <span className="material-symbols-outlined text-[16px] text-outline hidden sm:inline">
@@ -227,40 +250,84 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Profile Dropdown */}
           {showProfile && (
-            <div className="absolute right-0 mt-2 w-72 bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface-container p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
+            <div className="absolute right-0 mt-2 w-80 bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface-container p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
               <div className="flex items-center gap-3 pb-3 border-b border-surface-container">
-                <div className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
-                  AR
+                <div
+                  className={`w-11 h-11 rounded-2xl text-on-primary flex items-center justify-center font-extrabold text-sm shrink-0 shadow-sm ${
+                    isPimpinan ? 'bg-tertiary' : 'bg-primary'
+                  }`}
+                >
+                  {currentUser.avatarInitials}
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-sm text-on-surface truncate">
-                    apt. Rahmawati, S.Farm
+                  <span className="font-extrabold text-sm text-on-surface truncate">
+                    {currentUser.name}
                   </span>
-                  <span className="text-[11px] text-primary font-semibold">
-                    APJ Utama Instalasi Farmasi
+                  <span
+                    className={`text-[11px] font-bold ${
+                      isPimpinan ? 'text-tertiary' : 'text-primary'
+                    }`}
+                  >
+                    {currentUser.roleLabel}
                   </span>
+                  <span className="text-[10px] text-outline truncate">{currentUser.email}</span>
                 </div>
               </div>
 
               <div className="py-2.5 flex flex-col gap-1.5 text-xs text-on-surface-variant">
                 <div className="flex justify-between">
-                  <span className="text-outline">Nomor STRA:</span>
-                  <span className="font-mono font-medium text-on-surface">19890412/STRA/16</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-outline">Nomor SIPA:</span>
-                  <span className="font-mono font-medium text-on-surface">19920814/SIPA/21</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-outline">Masa Berlaku SIPA:</span>
-                  <span className="text-secondary font-medium">14 Februari 2027</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-outline">Shift Saat Ini:</span>
-                  <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-bold">
-                    Pagi (07:00 - 15:00)
+                  <span className="text-outline">Jabatan:</span>
+                  <span className="font-semibold text-on-surface text-right truncate max-w-[170px]">
+                    {currentUser.title}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-outline">Kredensial Resmi:</span>
+                  <span className="font-mono text-[11px] text-on-surface text-right truncate max-w-[180px]">
+                    {currentUser.credentialNumber}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-outline">Unit Kerja:</span>
+                  <span className="text-right text-on-surface truncate max-w-[180px]">
+                    {currentUser.department}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1">
+                  <span className="text-outline">Status Otorisasi:</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      isPimpinan
+                        ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+                        : 'bg-secondary-container text-on-secondary-container'
+                    }`}
+                  >
+                    {currentUser.statusBadge}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick Role Switcher */}
+              <div className="p-2.5 my-1 rounded-xl bg-surface-container-low border border-surface-container/70 flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-outline">
+                  Ganti Peran Pengguna (Simulasi 2 User):
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProfile(false);
+                    onSwitchRole();
+                  }}
+                  className="w-full py-2 px-3 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface text-xs font-bold border border-surface-container flex items-center justify-between transition-colors shadow-xs"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px] text-primary">
+                      swap_horiz
+                    </span>
+                    Beralih ke: {isPimpinan ? 'Petugas Farmasi' : 'Pimpinan Klinik'}
+                  </span>
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </button>
               </div>
 
               <div className="pt-2 border-t border-surface-container flex flex-col gap-1">
@@ -269,10 +336,21 @@ export const Header: React.FC<HeaderProps> = ({
                     setShowProfile(false);
                     onNavigateToScreen('pengaturan-sistem');
                   }}
-                  className="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-surface-container text-on-surface font-medium flex items-center gap-2"
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-surface-container text-on-surface font-medium flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-[16px] text-outline">settings</span>
                   Pengaturan Profil &amp; Klinik
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowProfile(false);
+                    onLogout();
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-error-container text-error font-bold flex items-center gap-2 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">logout</span>
+                  Keluar / Logout Akun
                 </button>
               </div>
             </div>

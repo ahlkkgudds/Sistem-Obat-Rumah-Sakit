@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
-import { QuarantineRecord } from '../types';
+import { QuarantineRecord, UserProfile } from '../types';
 
 interface LaporanBeritaAcaraViewProps {
   quarantineRecords: QuarantineRecord[];
   onShowToast: (message: string, icon?: string) => void;
+  currentUser?: UserProfile;
 }
 
 export const LaporanBeritaAcaraView: React.FC<LaporanBeritaAcaraViewProps> = ({
   quarantineRecords,
   onShowToast,
+  currentUser,
 }) => {
   const [selectedRecord, setSelectedRecord] = useState<QuarantineRecord>(quarantineRecords[0]);
+  const [isDirectorApproved, setIsDirectorApproved] = useState<Record<string, boolean>>({});
+
+  const isPimpinan = currentUser?.role === 'pimpinan_klinik';
+  const approved = selectedRecord ? isDirectorApproved[selectedRecord.id] : false;
+
+  const handleApprove = () => {
+    if (!selectedRecord) return;
+    setIsDirectorApproved((prev) => ({ ...prev, [selectedRecord.id]: true }));
+    onShowToast(
+      `Dokumen ${selectedRecord.docNumber} telah diotorisasi dan disahkan oleh dr. Hendra Wijaya, Sp.PK!`,
+      'verified'
+    );
+  };
 
   return (
     <div className="flex flex-col w-full gap-6">
@@ -47,26 +62,35 @@ export const LaporanBeritaAcaraView: React.FC<LaporanBeritaAcaraViewProps> = ({
           </span>
 
           <div className="flex flex-col gap-2">
-            {quarantineRecords.map((r) => (
-              <div
-                key={r.id}
-                onClick={() => setSelectedRecord(r)}
-                className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                  selectedRecord?.id === r.id
-                    ? 'bg-primary/5 border-primary shadow-sm'
-                    : 'bg-surface-container-low border-surface-container hover:bg-surface-container'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-xs text-primary">{r.docNumber}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-error-container text-on-error-container">
-                    {r.status}
-                  </span>
+            {quarantineRecords.map((r) => {
+              const hasDirectorApproved = isDirectorApproved[r.id];
+              return (
+                <div
+                  key={r.id}
+                  onClick={() => setSelectedRecord(r)}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                    selectedRecord?.id === r.id
+                      ? 'bg-primary/5 border-primary shadow-sm'
+                      : 'bg-surface-container-low border-surface-container hover:bg-surface-container'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-xs text-primary">{r.docNumber}</span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        hasDirectorApproved
+                          ? 'bg-secondary-container text-on-secondary-container'
+                          : 'bg-error-container text-on-error-container'
+                      }`}
+                    >
+                      {hasDirectorApproved ? 'Disahkan Direktur' : r.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-on-surface font-semibold mt-1 truncate">{r.reason}</p>
+                  <span className="text-[11px] text-outline block mt-0.5">{r.date}</span>
                 </div>
-                <p className="text-xs text-on-surface font-semibold mt-1 truncate">{r.reason}</p>
-                <span className="text-[11px] text-outline block mt-0.5">{r.date}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -103,6 +127,12 @@ export const LaporanBeritaAcaraView: React.FC<LaporanBeritaAcaraViewProps> = ({
                 <span className="font-mono text-xs font-bold text-on-surface-variant block mt-1">
                   Nomor: {selectedRecord.docNumber}
                 </span>
+                {approved && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold mt-2 shadow-xs">
+                    <span className="material-symbols-outlined text-[16px]">verified</span>
+                    Telah Disetujui &amp; Disahkan Oleh Pimpinan / Direktur Medis
+                  </div>
+                )}
               </div>
 
               {/* Body Statement */}
@@ -164,36 +194,70 @@ export const LaporanBeritaAcaraView: React.FC<LaporanBeritaAcaraViewProps> = ({
                 </p>
               </div>
 
-              {/* Signatures */}
-              <div className="grid grid-cols-2 gap-8 pt-6 mt-4 border-t border-surface-container text-xs text-center">
-                <div className="flex flex-col items-center justify-between h-28">
+              {/* 3 Signatures Columns including Direktur Klinik */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 mt-4 border-t border-surface-container text-xs text-center">
+                <div className="flex flex-col items-center justify-between h-32">
                   <span>Petugas Saksi / TTK</span>
-                  <div className="border-b border-on-surface w-36 pt-12">
+                  <div className="border-b border-on-surface w-36 pt-10">
                     <span className="font-semibold text-on-surface">apt. Nurul Huda, S.Farm</span>
                   </div>
                   <span className="text-[10px] text-outline">Tenaga Teknis Kefarmasian</span>
                 </div>
 
-                <div className="flex flex-col items-center justify-between h-28">
+                <div className="flex flex-col items-center justify-between h-32">
                   <span>Apoteker Penanggung Jawab</span>
-                  <div className="border-b border-on-surface w-36 pt-12">
+                  <div className="border-b border-on-surface w-36 pt-10">
                     <span className="font-bold text-primary">apt. Rahmawati, S.Farm</span>
                   </div>
                   <span className="text-[10px] text-outline">SIPA: 19890214/SIPA-31.71/2021</span>
                 </div>
+
+                <div className="flex flex-col items-center justify-between h-32">
+                  <span>Pimpinan / Direktur Klinik</span>
+                  <div className="border-b border-on-surface w-40 pt-10 relative">
+                    {approved && (
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-secondary font-mono text-[10px] font-bold border border-secondary px-1.5 rounded rotate-[-6deg] bg-secondary-container/50">
+                        DISETUJUI DIREKTUR
+                      </span>
+                    )}
+                    <span className="font-bold text-tertiary">dr. Hendra Wijaya, Sp.PK</span>
+                  </div>
+                  <span className="text-[10px] text-outline">Direktur Medis Klinik</span>
+                </div>
               </div>
 
-              {/* Print Action */}
-              <div className="flex justify-end gap-2 pt-4">
-                <button
-                  onClick={() =>
-                    onShowToast(`Mencetak Dokumen Resmi ${selectedRecord.docNumber}...`, 'print')
-                  }
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-xs sm:text-sm font-bold shadow-md hover:bg-primary-container transition-all"
-                >
-                  <span className="material-symbols-outlined text-[18px]">print</span>
-                  <span>Cetak Berita Acara Fisik</span>
-                </button>
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-surface-container">
+                <div>
+                  {isPimpinan && !approved && (
+                    <button
+                      type="button"
+                      onClick={handleApprove}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-tertiary text-on-tertiary text-xs sm:text-sm font-bold shadow-md hover:bg-tertiary-container transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">verified</span>
+                      <span>Otorisasi &amp; Tanda Tangan Direktur</span>
+                    </button>
+                  )}
+                  {isPimpinan && approved && (
+                    <span className="text-xs font-semibold text-secondary flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                      Dokumen Berita Acara ini telah Anda otorisasi secara digital.
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      onShowToast(`Mencetak Dokumen Resmi ${selectedRecord.docNumber}...`, 'print')
+                    }
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-xs sm:text-sm font-bold shadow-md hover:bg-primary-container transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">print</span>
+                    <span>Cetak Berita Acara Fisik</span>
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
